@@ -62,22 +62,29 @@ export async function sendFriendRequest(targetUser, currentUser) {
     throw new Error("You're already connected with this person.");
   }
 
-  // Check for an existing pending request either direction
-  const existing = await getDocs(query(
-    collection(db, "friend_requests"),
-    where("senderId", "in", [currentUser.uid, targetUser.id]),
-    where("status", "==", "pending")
-  ));
-  const duplicate = existing.docs.find(d => {
-    const r = d.data();
-    return (r.senderId === currentUser.uid && r.receiverId === targetUser.id) ||
-           (r.senderId === targetUser.id && r.receiverId === currentUser.uid);
-  });
-  if (duplicate) throw new Error("A request is already pending with this person.");
+  // Check for an existing pending request either direction.
+  // Two separate queries are required because Firestore security rules reject
+  // an "in" query that could return documents owned by another user.
+  const [snap1, snap2] = await Promise.all([
+    getDocs(query(
+      collection(db, "friend_requests"),
+      where("senderId", "==", currentUser.uid),
+      where("receiverId", "==", targetUser.id),
+      where("status", "==", "pending")
+    )),
+    getDocs(query(
+      collection(db, "friend_requests"),
+      where("senderId", "==", targetUser.id),
+      where("receiverId", "==", currentUser.uid),
+      where("status", "==", "pending")
+    ))
+  ]);
+  if (!snap1.empty || !snap2.empty) throw new Error("A request is already pending with this person.");
 
   await addDoc(collection(db, "friend_requests"), {
     senderId: currentUser.uid,
     senderName: currentUser.displayName || "",
+    senderEmail: currentUser.email || "",
     receiverId: targetUser.id,
     receiverName: targetUser.displayName || "",
     status: "pending",

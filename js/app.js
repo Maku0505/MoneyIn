@@ -182,6 +182,7 @@ function bootstrapSubscriptions(uid) {
     Data.watchIncomingFriendRequests(uid, (reqs) => {
       state.friendRequests = reqs;
       renderNotifBadge();
+      renderContactsList();
     })
   );
 
@@ -971,6 +972,42 @@ function renderContactsList() {
   const favIds = (state.profile && state.profile.starredFriends) || [];
   const favs = filtered.filter(c => favIds.includes(c.id));
   const all = filtered;
+
+  // Incoming friend requests section
+  const reqSection = document.getElementById("contacts-requests-section");
+  const reqContainer = document.getElementById("contacts-requests");
+  reqContainer.innerHTML = "";
+  const pendingReqs = state.friendRequests || [];
+  reqSection.hidden = pendingReqs.length === 0;
+  pendingReqs.forEach(req => {
+    const row = el("div", "ledger-row");
+    row.style.cursor = "default";
+    const avatar = el("span", "ledger-avatar", initials(req.senderName || "?"));
+    const main = el("div", "ledger-main");
+    main.appendChild(el("div", "ledger-title", escapeHtml(req.senderName || "Someone")));
+    main.appendChild(el("div", "ledger-sub", req.senderEmail || "wants to connect"));
+    const actions = el("div");
+    actions.style.cssText = "display:flex;gap:6px;flex-shrink:0";
+    const acceptBtn = el("button", "btn btn-primary btn-sm", "Accept");
+    const declineBtn = el("button", "btn btn-outline btn-sm", "Decline");
+    acceptBtn.addEventListener("click", async () => {
+      try {
+        await Data.respondToFriendRequest(req.id, true);
+        showToast("Contact added.");
+      } catch { showToast("Couldn't accept request.", true); }
+    });
+    declineBtn.addEventListener("click", async () => {
+      try {
+        await Data.respondToFriendRequest(req.id, false);
+      } catch { showToast("Couldn't decline request.", true); }
+    });
+    actions.appendChild(acceptBtn);
+    actions.appendChild(declineBtn);
+    row.appendChild(avatar);
+    row.appendChild(main);
+    row.appendChild(actions);
+    reqContainer.appendChild(row);
+  });
 
   const favContainer = document.getElementById("contacts-favorites");
   favContainer.innerHTML = "";
