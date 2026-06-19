@@ -31,6 +31,8 @@
     </div>
 
     <form id="signin-form" class="auth-form" novalidate>
+      <h1 class="auth-headline">Welcome back</h1>
+      <p class="auth-subtitle">Sign in to jump back into your activities</p>
       <label class="field">
         <span class="field-label">Email</span>
         <input type="email" name="email" autocomplete="email" required />
@@ -44,6 +46,8 @@
     </form>
 
     <form id="signup-form" class="auth-form" novalidate hidden>
+      <h1 class="auth-headline">Create your account</h1>
+      <p class="auth-subtitle">Start splitting shared expenses with clarity from day one</p>
       <label class="field">
         <span class="field-label">Display name</span>
         <input type="text" name="displayName" autocomplete="name" required />
@@ -76,9 +80,9 @@
   <header class="topbar">
     <div class="topbar-brand">Money<em>In</em></div>
     <nav class="topbar-tabs" id="main-nav">
+      <button class="topbar-tab" data-view="contacts">Contacts</button>
       <button class="topbar-tab is-active" data-view="home">Home</button>
       <button class="topbar-tab" data-view="groups">Groups</button>
-      <button class="topbar-tab" data-view="contacts">Contacts</button>
       <button class="topbar-tab" data-view="activity">Activity</button>
     </nav>
     <div class="topbar-actions">
@@ -101,12 +105,14 @@
 
       <section class="balance-strip">
         <div class="balance-cell">
-          <span class="balance-label">You're owed</span>
+          <span class="balance-label">Receive</span>
           <span id="home-total-owed" class="balance-amount balance-amount--positive">€0.00</span>
+          <span id="home-owed-sub" class="balance-sub">From your groups</span>
         </div>
         <div class="balance-cell">
-          <span class="balance-label">You owe</span>
+          <span class="balance-label">Give</span>
           <span id="home-total-owe" class="balance-amount balance-amount--negative">€0.00</span>
+          <span id="home-owe-sub" class="balance-sub">To your groups</span>
         </div>
       </section>
 
@@ -137,10 +143,10 @@
     <div class="page">
       <div class="page-head">
         <h1>Groups</h1>
-        <button id="new-group-btn" class="btn btn-primary btn-sm">New group</button>
       </div>
-      <div class="search-row">
+      <div class="search-row search-row--with-action">
         <input id="groups-search" type="search" placeholder="Search groups" class="search-input" />
+        <button id="new-group-btn" class="fab-btn" aria-label="New group">+</button>
       </div>
       <div id="groups-list" class="ledger-list">
         <p class="empty-hint">No groups yet. Create one to start splitting expenses.</p>
@@ -161,6 +167,7 @@
         <span id="group-detail-balance-label" class="balance-label">Settled up</span>
         <span id="group-detail-balance-amount" class="balance-amount">€0.00</span>
       </div>
+      <p id="group-detail-description" class="group-description"></p>
 
       <div class="action-row">
         <button id="group-add-expense-btn" class="btn btn-primary btn-sm">+ Add expense</button>
@@ -168,7 +175,7 @@
       </div>
 
       <div class="tab-row" role="tablist">
-        <button class="tab-btn is-active" data-gtab="members">Members</button>
+        <button class="tab-btn is-active" data-gtab="members">Members<span id="group-member-count" class="tab-count"></span></button>
         <button class="tab-btn" data-gtab="expenses">Expenses</button>
         <button class="tab-btn" data-gtab="settlements">Suggested</button>
       </div>
@@ -191,10 +198,10 @@
     <div class="page">
       <div class="page-head">
         <h1>Contacts</h1>
-        <button id="add-contact-btn" class="btn btn-primary btn-sm">Add contact</button>
       </div>
-      <div class="search-row">
+      <div class="search-row search-row--with-action">
         <input id="contacts-search" type="search" placeholder="Search contacts" class="search-input" />
+        <button id="add-contact-btn" class="fab-btn" aria-label="Add contact">+</button>
       </div>
       <section class="section">
         <h2 class="section-subhead">Favorites</h2>
@@ -241,6 +248,16 @@
           <span id="activity-total-spent" class="balance-amount">€0.00</span>
         </div>
       </section>
+      <section class="balance-strip balance-strip--mt">
+        <div class="balance-cell">
+          <span class="balance-label">You owe</span>
+          <span id="activity-total-owe" class="balance-amount balance-amount--negative">€0.00</span>
+        </div>
+        <div class="balance-cell">
+          <span class="balance-label">You are owed</span>
+          <span id="activity-total-owed-by" class="balance-amount balance-amount--positive">€0.00</span>
+        </div>
+      </section>
       <section class="section">
         <h2 class="section-subhead">By category</h2>
         <div id="activity-category-breakdown" class="category-bars">
@@ -257,9 +274,9 @@
   </main>
 
   <nav class="bottom-nav" id="bottom-nav">
+    <button class="bottom-nav-item" data-view="contacts">Contacts</button>
     <button class="bottom-nav-item is-active" data-view="home">Home</button>
     <button class="bottom-nav-item" data-view="groups">Groups</button>
-    <button class="bottom-nav-item" data-view="contacts">Contacts</button>
     <button class="bottom-nav-item" data-view="activity">Activity</button>
   </nav>
 
@@ -345,7 +362,10 @@
 
   <form id="expense-form" class="sheet-form">
     <label class="field">
-      <span class="field-label">Description</span>
+      <div class="field-label-row">
+        <span class="field-label">Description</span>
+        <span class="field-count"><span id="expense-desc-counter">0</span> / 60</span>
+      </div>
       <input type="text" name="description" required maxlength="60" id="expense-description" />
     </label>
     <span class="field-label">Category</span>
@@ -404,6 +424,7 @@
     <h2>Settle up</h2>
     <button class="icon-btn sheet-close" data-close>✕</button>
   </div>
+  <p id="settle-subtitle" class="sheet-subtitle"></p>
   <div id="settle-content"></div>
 </div>
 

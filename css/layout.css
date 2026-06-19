@@ -293,3 +293,148 @@
 @media (min-width: 760px) {
   .bottom-nav { display: none; }
 }
+
+/* ---- Auth headlines ---- */
+.auth-headline {
+  font-family: var(--font-display);
+  font-size: 25px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 var(--sp-1);
+  color: var(--ink);
+}
+.auth-subtitle {
+  color: var(--grey);
+  font-size: 13.5px;
+  margin-bottom: var(--sp-4);
+  line-height: 1.4;
+}
+
+/* ---- Balance cell sub-text ---- */
+.balance-sub {
+  font-size: 11px;
+  color: var(--grey-light);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 1px;
+}
+
+/* ---- Balance strip margin variant ---- */
+.balance-strip--mt { margin-top: var(--sp-3); }
+
+/* ---- Search row with inline action button ---- */
+.search-row--with-action {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.search-row--with-action .search-input { flex: 1; }
+
+.fab-btn {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: var(--moss);
+  color: var(--paper);
+  border: none;
+  font-size: 26px;
+  font-weight: 300;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 120ms ease, transform 80ms ease;
+}
+.fab-btn:hover { background: var(--moss-deep); }
+.fab-btn:active { transform: scale(0.95); }
+
+/* ---- Group description ---- */
+.group-description {
+  color: var(--grey);
+  font-size: 13.5px;
+  line-height: 1.45;
+  margin-bottom: var(--sp-4);
+  padding: 0 2px;
+}
+
+/* ---- Tab member count badge ---- */
+.tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--moss);
+  color: var(--paper);
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  font-family: var(--font-body);
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  margin-left: 5px;
+  vertical-align: middle;
+}
+
+/* ---- Sheet subtitle ---- */
+.sheet-subtitle {
+  font-size: 13.5px;
+  color: var(--grey);
+  margin: calc(-1 * var(--sp-3)) 0 var(--sp-4);
+  line-height: 1.4;
+}
+
+/* ---- Settle summary section ---- */
+.settle-section-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--grey);
+  margin: var(--sp-4) 0 var(--sp-2);
+}
+.settle-debt-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+.settle-debt-row:last-child { border-bottom: none; }
+.settle-debt-main { flex: 1; }
+.settle-debt-name { font-weight: 600; font-size: 14.5px; }
+.settle-debt-dir { font-size: 12.5px; color: var(--grey); margin-top: 1px; }
+.settle-debt-amount {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 14.5px;
+  color: var(--rust);
+}
+
+/* ---- Field label row with char counter ---- */
+.field-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: var(--sp-1);
+}
+.field-label-row .field-label { margin-bottom: 0; }
+.field-count {
+  font-size: 11.5px;
+  color: var(--grey-light);
+  font-family: var(--font-mono);
+}
+
+/* ---- Activity feed date headers ---- */
+.feed-date-header {
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--grey);
+  padding: var(--sp-3) 0 var(--sp-1);
+  border-top: 1px solid var(--line-soft);
+  margin-top: var(--sp-2);
+}
+.feed-date-header:first-child { border-top: none; margin-top: 0; }

@@ -27,6 +27,7 @@ const state = {
   currentGroupExpenses: [],     // expenses for open group
   currentContactId: null,        // open contact detail
   pendingGroupInvites: [],        // staged invites in "create group" sheet
+  groupBalances: {},              // groupId → { myBalance, expenseCount }
   unsubscribers: []
 };
 
@@ -169,6 +170,7 @@ function bootstrapSubscriptions(uid) {
         const g = groups.find(gr => gr.id === state.currentGroupId);
         if (g) renderGroupDetailHeader(g);
       }
+      computeGroupBalances(groups, uid);
     })
   );
 
@@ -298,6 +300,7 @@ async function computeAllGroupBalancesForUser() {
         date: exp.date,
         groupName: g.name,
         userImpact: Math.round((paid - share) * 100) / 100,
+        myShare: Math.round(share * 100) / 100,
         createdAtMs: exp.createdAt?.toMillis ? exp.createdAt.toMillis() : 0
       });
     });
@@ -320,6 +323,35 @@ function fetchGroupExpensesOnce(groupId) {
 // GROUPS LIST
 // ----------------------------------------------------------------
 
+async function computeGroupBalances(groups, uid) {
+  const results = {};
+  await Promise.all(groups.map(async (g) => {
+    const expenses = await fetchGroupExpensesOnce(g.id);
+    const balances = Settle.computeBalances(expenses, g.members || []);
+    const expenseCount = expenses.filter(e => e.type !== "Payment").length;
+    results[g.id] = { myBalance: balances[uid] || 0, expenseCount };
+  }));
+  state.groupBalances = results;
+  renderGroupsList();
+}
+
+function buildGroupRow(g) {
+  const info = state.groupBalances[g.id];
+  const myBalance = info?.myBalance ?? null;
+  const expCount = info?.expenseCount ?? null;
+  const memberCount = (g.members || []).length;
+  const sub = expCount !== null
+    ? `${memberCount} member${memberCount === 1 ? "" : "s"} · ${expCount} expense${expCount === 1 ? "" : "s"}`
+    : `${memberCount} member${memberCount === 1 ? "" : "s"}`;
+
+  const amount = (myBalance !== null && Math.abs(myBalance) >= 0.005)
+    ? formatMoney(Math.abs(myBalance)) : undefined;
+  const amountTone = myBalance !== null && myBalance > 0 ? "positive"
+    : myBalance !== null && myBalance < 0 ? "negative" : "neutral";
+
+  return buildLedgerRow({ avatarText: initials(g.name), title: g.name, sub, amount, amountTone, onClick: () => openGroupDetail(g.id) });
+}
+
 function renderGroupsList() {
   const container = document.getElementById("groups-list");
   container.innerHTML = "";
@@ -331,15 +363,29 @@ function renderGroupsList() {
   const searchTerm = document.getElementById("groups-search").value.trim().toLowerCase();
   const filtered = state.groups.filter(g => g.name.toLowerCase().includes(searchTerm));
 
-  filtered.forEach(g => {
-    const row = buildLedgerRow({
-      avatarText: initials(g.name),
-      title: g.name,
-      sub: `${(g.members || []).length} member${(g.members || []).length === 1 ? "" : "s"}`,
-      onClick: () => openGroupDetail(g.id)
-    });
-    container.appendChild(row);
-  });
+  if (filtered.length === 0) {
+    container.innerHTML = `<p class="empty-hint">No groups match your search.</p>`;
+    return;
+  }
+
+  const favIds = (state.profile?.starredGroups) || [];
+  const favs = filtered.filter(g => favIds.includes(g.id));
+  const owedGroups = filtered.filter(g => !favIds.includes(g.id) && (state.groupBalances[g.id]?.myBalance ?? 0) > 0.005);
+  const oweGroups = filtered.filter(g => !favIds.includes(g.id) && (state.groupBalances[g.id]?.myBalance ?? 0) < -0.005);
+  const settledGroups = filtered.filter(g => !favIds.includes(g.id) && Math.abs(state.groupBalances[g.id]?.myBalance ?? 0) <= 0.005);
+
+  function addSection(label, groups) {
+    if (groups.length === 0) return;
+    const header = el("p", "section-subhead", label);
+    header.style.marginTop = "var(--sp-4)";
+    container.appendChild(header);
+    groups.forEach(g => container.appendChild(buildGroupRow(g)));
+  }
+
+  addSection("Favourites", favs);
+  addSection("You are owed", owedGroups);
+  addSection("You owe", oweGroups);
+  addSection("Settled up", settledGroups);
 }
 
 document.getElementById("groups-search").addEventListener("input", renderGroupsList);
@@ -469,12 +515,29 @@ function openGroupDetail(groupId) {
 
 function renderGroupDetailHeader(group) {
   document.getElementById("group-detail-name").textContent = group.name;
+  const descEl = document.getElementById("group-detail-description");
+  if (descEl) {
+    descEl.textContent = group.description || "";
+    descEl.hidden = !group.description;
+  }
 }
 
 function renderGroupMembers(group, expenses) {
   const balances = Settle.computeBalances(expenses, group.members || []);
   const container = document.getElementById("group-members-list");
   container.innerHTML = "";
+
+  // Member count badge in tab
+  const countEl = document.getElementById("group-member-count");
+  if (countEl) countEl.textContent = (group.members || []).length;
+
+  // Expense count per member
+  const paidCounts = {};
+  expenses.filter(e => e.type !== "Payment").forEach(exp => {
+    Object.keys(exp.paidBy || {}).forEach(uid => {
+      paidCounts[uid] = (paidCounts[uid] || 0) + 1;
+    });
+  });
 
   // Update the top balance card with the *current user's* position
   const myBalance = balances[state.user.uid] || 0;
@@ -500,9 +563,8 @@ function renderGroupMembers(group, expenses) {
       const u = usersMap[uid];
       const name = uid === state.user.uid ? "You" : (u?.displayName || "Member");
       const bal = balances[uid] || 0;
-      let sub = "Settled up";
-      if (bal > 0.005) sub = "Owed";
-      else if (bal < -0.005) sub = "Owes";
+      const paidCount = paidCounts[uid] || 0;
+      const sub = `Paid ${paidCount} expense${paidCount !== 1 ? "s" : ""}`;
 
       container.appendChild(buildLedgerRow({
         avatarText: initials(u?.displayName || "?"),
@@ -631,6 +693,8 @@ function openAddExpenseSheet() {
   document.getElementById("expense-form").reset();
   document.getElementById("expense-form-error").hidden = true;
   document.querySelector('#expense-form input[name="date"]').value = todayISO();
+  const counter = document.getElementById("expense-desc-counter");
+  if (counter) counter.textContent = "0";
   setActiveChip(document.getElementById("expense-category-chips"), "general");
   document.querySelector('#expense-form input[name="category"]').value = "general";
 
@@ -709,6 +773,11 @@ function wireDetailTotals() {
   inputs.forEach(i => i.addEventListener("input", recompute));
   recompute();
 }
+
+document.getElementById("expense-description").addEventListener("input", () => {
+  const counter = document.getElementById("expense-desc-counter");
+  if (counter) counter.textContent = document.getElementById("expense-description").value.length;
+});
 
 document.getElementById("expense-form").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -797,6 +866,9 @@ function openSettleSheet() {
   const group = state.groups.find(g => g.id === state.currentGroupId);
   if (!group) return;
 
+  const subtitleEl = document.getElementById("settle-subtitle");
+  if (subtitleEl) subtitleEl.textContent = `Choose how to settle balances in ${group.name}`;
+
   const balances = Settle.computeBalances(state.currentGroupExpenses, group.members || []);
   const payments = Settle.suggestSettlements(balances);
   const myPayments = payments.filter(p => p.from === state.user.uid || p.to === state.user.uid);
@@ -812,40 +884,72 @@ function openSettleSheet() {
 
   Data.getUsersByIds(group.members || []).then(usersMap => {
     content.innerHTML = "";
+
+    // Summary card
+    const totalOwe = myPayments.filter(p => p.from === state.user.uid).reduce((s, p) => s + p.amount, 0);
+    const totalOwed = myPayments.filter(p => p.to === state.user.uid).reduce((s, p) => s + p.amount, 0);
+
+    if (totalOwe > 0 || totalOwed > 0) {
+      content.appendChild(el("p", "settle-section-label", "Summary"));
+      const summaryCard = el("div", "group-balance-card");
+      summaryCard.style.marginBottom = "var(--sp-4)";
+      if (totalOwe > 0) {
+        summaryCard.innerHTML = `
+          <span class="balance-label">You owe</span>
+          <span class="balance-amount balance-amount--negative">${formatMoney(totalOwe)}</span>
+        `;
+      } else {
+        summaryCard.innerHTML = `
+          <span class="balance-label">You are owed</span>
+          <span class="balance-amount balance-amount--positive">${formatMoney(totalOwed)}</span>
+        `;
+      }
+      content.appendChild(summaryCard);
+    }
+
+    // Debts list
+    content.appendChild(el("p", "settle-section-label", "Debts to settle"));
+    const debtsList = el("div");
     myPayments.forEach(p => {
       const isOwing = p.from === state.user.uid;
       const otherUid = isOwing ? p.to : p.from;
       const otherName = usersMap[otherUid]?.displayName || "Member";
 
-      const card = el("div", "group-balance-card");
-      card.style.marginBottom = "12px";
-      card.innerHTML = `
-        <span class="balance-label">${isOwing ? `You owe ${escapeHtml(otherName)}` : `${escapeHtml(otherName)} owes you`}</span>
-        <span class="balance-amount ${isOwing ? "balance-amount--negative" : "balance-amount--positive"}">${formatMoney(p.amount)}</span>
+      const row = el("div", "settle-debt-row");
+      row.innerHTML = `
+        <span class="ledger-avatar">${initials(otherName)}</span>
+        <div class="settle-debt-main">
+          <div class="settle-debt-name">${escapeHtml(otherName)}</div>
+          <div class="settle-debt-dir">${isOwing ? "You owe them" : "They owe you"}</div>
+        </div>
+        <span class="settle-debt-amount">${formatMoney(p.amount)}</span>
       `;
-      const actions = el("div", "action-row");
-      actions.style.marginBottom = "0";
+      debtsList.appendChild(row);
+    });
+    content.appendChild(debtsList);
 
-      const markPaidBtn = el("button", "btn btn-primary btn-sm", "Mark as settled");
-      markPaidBtn.addEventListener("click", async () => {
-        try {
+    // Single action button
+    const actionRow = el("div", "action-row");
+    actionRow.style.marginTop = "var(--sp-5)";
+    const markAllBtn = el("button", "btn btn-primary", "Mark all as settled");
+    markAllBtn.addEventListener("click", async () => {
+      try {
+        for (const p of myPayments) {
           await Data.createSettlement(state.currentGroupId, {
             from: p.from, to: p.to, amount: p.amount, createdBy: state.user.uid
           });
-          closeSheet();
-          showToast("Settlement recorded.");
-        } catch (err) {
-          showToast(err.message || "Couldn't record the settlement.", true);
         }
-      });
-
-      actions.appendChild(markPaidBtn);
-      content.appendChild(card);
-      content.appendChild(actions);
+        closeSheet();
+        showToast("Settlements recorded.");
+      } catch (err) {
+        showToast(err.message || "Couldn't record the settlement.", true);
+      }
     });
+    actionRow.appendChild(markAllBtn);
+    content.appendChild(actionRow);
 
-    const note = el("p", "hint-text", "MoneyIn doesn't move real money — this records the debt as settled outside the app.");
-    note.style.marginTop = "16px";
+    const note = el("p", "hint-text", "MoneyIn doesn't move real money — this records debts as settled outside the app.");
+    note.style.marginTop = "var(--sp-3)";
     content.appendChild(note);
   });
 
@@ -996,29 +1100,43 @@ function openContactDetail(contactUid) {
 // ----------------------------------------------------------------
 
 async function renderActivity() {
-  const { recent } = await computeAllGroupBalancesForUser();
+  const { owed, owe, recent } = await computeAllGroupBalancesForUser();
   const now = new Date();
   const thisMonth = recent.filter(r => {
     const d = new Date(r.date);
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   });
 
-  const totalSpent = thisMonth.reduce((sum, r) => sum + Math.max(0, r.userImpact), 0);
+  const totalSpent = thisMonth.reduce((sum, r) => sum + (r.myShare || 0), 0);
   document.getElementById("activity-total-spent").textContent = formatMoney(totalSpent);
+
+  const oweEl = document.getElementById("activity-total-owe");
+  const owedByEl = document.getElementById("activity-total-owed-by");
+  if (oweEl) oweEl.textContent = formatMoney(owe);
+  if (owedByEl) owedByEl.textContent = formatMoney(owed);
 
   const feedContainer = document.getElementById("activity-feed");
   feedContainer.innerHTML = "";
   if (thisMonth.length === 0) {
     feedContainer.innerHTML = `<p class="empty-hint">No activity yet.</p>`;
   } else {
+    // Group by date
+    const byDate = new Map();
     thisMonth.forEach(item => {
-      feedContainer.appendChild(buildLedgerRow({
-        avatarText: "🧾",
-        title: item.description,
-        sub: `${item.groupName} · ${formatDate(item.date)}`,
-        amount: formatMoney(item.userImpact),
-        amountTone: item.userImpact > 0 ? "positive" : item.userImpact < 0 ? "negative" : "neutral"
-      }));
+      if (!byDate.has(item.date)) byDate.set(item.date, []);
+      byDate.get(item.date).push(item);
+    });
+    byDate.forEach((items, date) => {
+      feedContainer.appendChild(el("div", "feed-date-header", formatDate(date)));
+      items.forEach(item => {
+        feedContainer.appendChild(buildLedgerRow({
+          avatarText: "🧾",
+          title: item.description,
+          sub: item.groupName,
+          amount: formatMoney(item.userImpact),
+          amountTone: item.userImpact > 0 ? "positive" : item.userImpact < 0 ? "negative" : "neutral"
+        }));
+      });
     });
   }
 
