@@ -1,0 +1,295 @@
+/* ============================================================
+   MoneyIn — Layout
+   ============================================================ */
+
+/* ---- Auth screen ---- */
+.auth-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-5);
+  background:
+    radial-gradient(ellipse at top left, rgba(61,90,61,0.08), transparent 50%),
+    var(--paper);
+}
+.auth-card {
+  width: 100%;
+  max-width: 380px;
+  padding: var(--sp-6) var(--sp-5);
+}
+.auth-mark {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-1);
+}
+.auth-mark-amount {
+  display: none;
+}
+.auth-mark-word {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.auth-mark-word em {
+  font-style: italic;
+  color: var(--moss);
+}
+.auth-tagline {
+  color: var(--grey);
+  font-size: 14px;
+  margin-bottom: var(--sp-5);
+}
+
+.auth-tabs {
+  display: flex;
+  gap: var(--sp-5);
+  border-bottom: 1px solid var(--line);
+  margin-bottom: var(--sp-5);
+}
+.auth-tab {
+  background: none;
+  border: none;
+  padding: 0 0 var(--sp-2);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--grey);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+.auth-tab.is-active {
+  color: var(--ink);
+  border-bottom-color: var(--moss);
+}
+
+.auth-form { display: flex; flex-direction: column; }
+.auth-form .link-btn {
+  align-self: flex-end;
+  margin: -8px 0 var(--sp-4);
+}
+.auth-form .btn-primary { margin-top: var(--sp-2); }
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin: var(--sp-5) 0;
+  color: var(--grey-light);
+  font-size: 12px;
+}
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+.auth-error {
+  background: var(--rust-tint);
+  color: var(--rust);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 13px;
+  margin-top: var(--sp-4);
+}
+
+/* ---- App shell ---- */
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-3) var(--sp-5);
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+.topbar-brand {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 19px;
+}
+.topbar-brand em { font-style: italic; color: var(--moss); }
+
+.topbar-tabs {
+  display: none;
+  gap: var(--sp-5);
+}
+.topbar-tab {
+  background: none;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--grey);
+  padding: var(--sp-1) 0;
+  border-bottom: 2px solid transparent;
+}
+.topbar-tab.is-active { color: var(--ink); border-bottom-color: var(--moss); }
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+@media (min-width: 760px) {
+  .topbar-tabs { display: flex; }
+}
+
+/* ---- Views ---- */
+.view {
+  display: none;
+  flex: 1;
+  padding-bottom: 88px; /* room for bottom nav on mobile */
+}
+.view.is-active { display: block; }
+
+@media (min-width: 760px) {
+  .view { padding-bottom: var(--sp-6); }
+}
+
+.page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--sp-5);
+}
+
+.page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--sp-5);
+  gap: var(--sp-3);
+}
+.page-head--back { gap: var(--sp-2); }
+.page-head--back h1 { font-size: 20px; flex: 1; }
+
+.search-row { margin-bottom: var(--sp-4); }
+
+.section { margin-top: var(--sp-6); }
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: var(--sp-3);
+}
+.section-subhead {
+  font-size: 12.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--grey);
+  margin-bottom: var(--sp-3);
+}
+
+/* ---- Balance strip (Home, Activity) ---- */
+.balance-strip {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.balance-strip:has(.balance-cell:only-child) {
+  grid-template-columns: 1fr;
+}
+.balance-cell {
+  background: var(--white);
+  padding: var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.balance-label {
+  font-size: 12px;
+  color: var(--grey);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.balance-amount {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 600;
+}
+.balance-amount--positive { color: var(--moss); }
+.balance-amount--negative { color: var(--rust); }
+
+/* ---- Group balance card ---- */
+.group-balance-card {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: var(--sp-5);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: var(--sp-4);
+}
+
+.action-row {
+  display: flex;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-5);
+}
+.action-row .btn { flex: 1; }
+
+/* ---- Group detail tabs ---- */
+.tab-row {
+  display: flex;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: var(--sp-4);
+}
+.tab-btn {
+  background: none;
+  border: none;
+  padding: 10px var(--sp-3);
+  font-weight: 600;
+  font-size: 13.5px;
+  color: var(--grey);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+.tab-btn.is-active { color: var(--moss); border-bottom-color: var(--moss); }
+.gtab-panel { display: none; }
+.gtab-panel.is-active { display: block; }
+
+/* ---- Mobile bottom nav (replaces topbar tabs on small screens) ---- */
+.bottom-nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  display: flex;
+  background: var(--paper);
+  border-top: 1px solid var(--line);
+  z-index: 20;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+.bottom-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: none;
+  border: none;
+  padding: 10px 0 8px;
+  color: var(--grey);
+  font-size: 11px;
+  font-weight: 600;
+}
+.bottom-nav-item.is-active { color: var(--moss); }
+
+@media (min-width: 760px) {
+  .bottom-nav { display: none; }
+}

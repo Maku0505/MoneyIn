@@ -1,0 +1,118 @@
+/* ============================================================
+   MoneyIn — Base styles, design tokens
+   ============================================================ */
+
+:root {
+  /* Color tokens */
+  --ink: #0E0F0C;
+  --ink-soft: #2A2B26;
+  --paper: #F7F5EF;
+  --paper-dim: #EDEAE0;
+  --line: #D8D4C6;
+  --line-soft: #E7E4D8;
+  --moss: #3D5A3D;
+  --moss-deep: #2C4330;
+  --moss-tint: #E3EAE1;
+  --rust: #C75D3A;
+  --rust-tint: #F6E4DC;
+  --grey: #8A8578;
+  --grey-light: #B5B0A0;
+  --white: #FFFFFF;
+
+  /* Type */
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'Roboto Mono', ui-monospace, monospace;
+
+  /* Spacing scale */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 48px;
+
+  /* Radius — intentionally restrained, ledger not bubbly */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+
+  --shadow-sheet: 0 -8px 32px rgba(14, 15, 12, 0.18);
+  --shadow-card: 0 1px 2px rgba(14, 15, 12, 0.06);
+
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  margin: 0;
+  color: var(--ink);
+}
+
+h1 { font-size: 28px; letter-spacing: -0.01em; }
+h2 { font-size: 17px; font-weight: 600; }
+
+p { margin: 0; }
+
+button {
+  font-family: var(--font-body);
+  cursor: pointer;
+}
+
+input, select {
+  font-family: var(--font-body);
+  font-size: 15px;
+}
+
+a { color: inherit; }
+
+::selection {
+  background: var(--moss-tint);
+  color: var(--moss-deep);
+}
+
+/* Visible keyboard focus everywhere */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+a:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--moss);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Tabular numerals wherever amounts render */
+.amount, .balance-amount, .ledger-amount, .mono {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+.screen { width: 100%; min-height: 100vh; }

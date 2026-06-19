@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MoneyIn — split expenses without the spreadsheet</title>
+<meta name="description" content="Track shared expenses, split costs, and settle up with friends." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/base.css" />
+<link rel="stylesheet" href="css/components.css" />
+<link rel="stylesheet" href="css/layout.css" />
+</head>
+<body>
+
+<!-- ========== AUTH SCREEN ========== -->
+<section id="auth-screen" class="screen auth-screen">
+  <div class="auth-card">
+    <div class="auth-mark">
+      <span class="auth-mark-amount">In</span>
+      <span class="auth-mark-word">Money<em>In</em></span>
+    </div>
+    <p class="auth-tagline">Shared costs, kept straight.</p>
+
+    <div class="auth-tabs" role="tablist">
+      <button class="auth-tab is-active" data-tab="signin" role="tab" aria-selected="true">Sign in</button>
+      <button class="auth-tab" data-tab="signup" role="tab" aria-selected="false">Create account</button>
+    </div>
+
+    <form id="signin-form" class="auth-form" novalidate>
+      <label class="field">
+        <span class="field-label">Email</span>
+        <input type="email" name="email" autocomplete="email" required />
+      </label>
+      <label class="field">
+        <span class="field-label">Password</span>
+        <input type="password" name="password" autocomplete="current-password" required />
+      </label>
+      <button type="button" id="forgot-password-btn" class="link-btn">Forgot password?</button>
+      <button type="submit" class="btn btn-primary btn-block">Sign in</button>
+    </form>
+
+    <form id="signup-form" class="auth-form" novalidate hidden>
+      <label class="field">
+        <span class="field-label">Display name</span>
+        <input type="text" name="displayName" autocomplete="name" required />
+      </label>
+      <label class="field">
+        <span class="field-label">Email</span>
+        <input type="email" name="email" autocomplete="email" required />
+      </label>
+      <label class="field">
+        <span class="field-label">Password</span>
+        <input type="password" name="password" autocomplete="new-password" minlength="6" required />
+      </label>
+      <button type="submit" class="btn btn-primary btn-block">Create account</button>
+    </form>
+
+    <div class="auth-divider"><span>or</span></div>
+
+    <button id="google-signin-btn" class="btn btn-outline btn-block">
+      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84c-.21 1.13-.84 2.09-1.8 2.73v2.27h2.91c1.7-1.57 2.69-3.88 2.69-6.64z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.91-2.27c-.81.54-1.84.86-3.05.86-2.34 0-4.32-1.58-5.03-3.71H.95v2.33C2.44 15.98 5.48 18 9 18z"/><path fill="#FBBC05" d="M3.97 10.7A5.4 5.4 0 0 1 3.68 9c0-.59.1-1.17.29-1.7V4.97H.95A8.96 8.96 0 0 0 0 9c0 1.45.35 2.82.95 4.03l3.02-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0 5.48 0 2.44 2.02.95 4.97l3.02 2.33C4.68 5.16 6.66 3.58 9 3.58z"/></svg>
+      Continue with Google
+    </button>
+
+    <p id="auth-error" class="auth-error" role="alert" hidden></p>
+  </div>
+</section>
+
+<!-- ========== APP SHELL ========== -->
+<div id="app-shell" class="app-shell" hidden>
+
+  <header class="topbar">
+    <div class="topbar-brand">Money<em>In</em></div>
+    <nav class="topbar-tabs" id="main-nav">
+      <button class="topbar-tab is-active" data-view="home">Home</button>
+      <button class="topbar-tab" data-view="groups">Groups</button>
+      <button class="topbar-tab" data-view="contacts">Contacts</button>
+      <button class="topbar-tab" data-view="activity">Activity</button>
+    </nav>
+    <div class="topbar-actions">
+      <button id="notif-btn" class="icon-btn" aria-label="Notifications">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span id="notif-dot" class="notif-dot" hidden></span>
+      </button>
+      <button id="profile-btn" class="avatar-btn" aria-label="Profile and settings">
+        <span id="profile-initial">?</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ===== HOME VIEW ===== -->
+  <main id="view-home" class="view is-active">
+    <div class="page">
+      <div class="page-head">
+        <h1>Home</h1>
+      </div>
+
+      <section class="balance-strip">
+        <div class="balance-cell">
+          <span class="balance-label">You're owed</span>
+          <span id="home-total-owed" class="balance-amount balance-amount--positive">€0.00</span>
+        </div>
+        <div class="balance-cell">
+          <span class="balance-label">You owe</span>
+          <span id="home-total-owe" class="balance-amount balance-amount--negative">€0.00</span>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <h2>Favorite groups</h2>
+          <button class="link-btn" data-view-link="groups">View all</button>
+        </div>
+        <div id="home-favorite-groups" class="ledger-list">
+          <p class="empty-hint">Star a group to pin it here.</p>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <h2>Recent activity</h2>
+          <button class="link-btn" data-view-link="activity">View all</button>
+        </div>
+        <div id="home-recent-activity" class="ledger-list">
+          <p class="empty-hint">No activity yet. Add an expense to get started.</p>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- ===== GROUPS VIEW (list) ===== -->
+  <main id="view-groups" class="view">
+    <div class="page">
+      <div class="page-head">
+        <h1>Groups</h1>
+        <button id="new-group-btn" class="btn btn-primary btn-sm">New group</button>
+      </div>
+      <div class="search-row">
+        <input id="groups-search" type="search" placeholder="Search groups" class="search-input" />
+      </div>
+      <div id="groups-list" class="ledger-list">
+        <p class="empty-hint">No groups yet. Create one to start splitting expenses.</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- ===== GROUP DETAIL VIEW ===== -->
+  <main id="view-group-detail" class="view">
+    <div class="page">
+      <div class="page-head page-head--back">
+        <button class="back-btn" data-view-link="groups" aria-label="Back to groups">←</button>
+        <h1 id="group-detail-name">Group</h1>
+        <button id="group-settings-btn" class="icon-btn" aria-label="Group settings">⋯</button>
+      </div>
+
+      <div class="group-balance-card">
+        <span id="group-detail-balance-label" class="balance-label">Settled up</span>
+        <span id="group-detail-balance-amount" class="balance-amount">€0.00</span>
+      </div>
+
+      <div class="action-row">
+        <button id="group-add-expense-btn" class="btn btn-primary btn-sm">+ Add expense</button>
+        <button id="group-settle-btn" class="btn btn-outline btn-sm">Settle up</button>
+      </div>
+
+      <div class="tab-row" role="tablist">
+        <button class="tab-btn is-active" data-gtab="members">Members</button>
+        <button class="tab-btn" data-gtab="expenses">Expenses</button>
+        <button class="tab-btn" data-gtab="settlements">Suggested</button>
+      </div>
+
+      <div id="gtab-members" class="gtab-panel is-active">
+        <div id="group-members-list" class="ledger-list"></div>
+      </div>
+      <div id="gtab-expenses" class="gtab-panel">
+        <div id="group-expenses-list" class="ledger-list"></div>
+      </div>
+      <div id="gtab-settlements" class="gtab-panel">
+        <p class="hint-text">Fastest way to settle current balances.</p>
+        <div id="group-suggested-list" class="ledger-list"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ===== CONTACTS VIEW ===== -->
+  <main id="view-contacts" class="view">
+    <div class="page">
+      <div class="page-head">
+        <h1>Contacts</h1>
+        <button id="add-contact-btn" class="btn btn-primary btn-sm">Add contact</button>
+      </div>
+      <div class="search-row">
+        <input id="contacts-search" type="search" placeholder="Search contacts" class="search-input" />
+      </div>
+      <section class="section">
+        <h2 class="section-subhead">Favorites</h2>
+        <div id="contacts-favorites" class="ledger-list">
+          <p class="empty-hint">No favorites yet.</p>
+        </div>
+      </section>
+      <section class="section">
+        <h2 class="section-subhead">All contacts</h2>
+        <div id="contacts-all" class="ledger-list">
+          <p class="empty-hint">No contacts yet. Add someone by email.</p>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- ===== CONTACT DETAIL VIEW ===== -->
+  <main id="view-contact-detail" class="view">
+    <div class="page">
+      <div class="page-head page-head--back">
+        <button class="back-btn" data-view-link="contacts" aria-label="Back to contacts">←</button>
+        <h1 id="contact-detail-name">Contact</h1>
+      </div>
+      <div class="group-balance-card">
+        <span id="contact-detail-balance-label" class="balance-label">Settled up</span>
+        <span id="contact-detail-balance-amount" class="balance-amount">€0.00</span>
+      </div>
+      <section class="section">
+        <h2 class="section-subhead">Shared groups</h2>
+        <div id="contact-shared-groups" class="ledger-list"></div>
+      </section>
+    </div>
+  </main>
+
+  <!-- ===== ACTIVITY VIEW ===== -->
+  <main id="view-activity" class="view">
+    <div class="page">
+      <div class="page-head">
+        <h1>Activity</h1>
+      </div>
+      <section class="balance-strip">
+        <div class="balance-cell">
+          <span class="balance-label">Total spent (this month)</span>
+          <span id="activity-total-spent" class="balance-amount">€0.00</span>
+        </div>
+      </section>
+      <section class="section">
+        <h2 class="section-subhead">By category</h2>
+        <div id="activity-category-breakdown" class="category-bars">
+          <p class="empty-hint">Nothing tracked yet this month.</p>
+        </div>
+      </section>
+      <section class="section">
+        <h2 class="section-subhead">Feed</h2>
+        <div id="activity-feed" class="ledger-list">
+          <p class="empty-hint">No activity yet.</p>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <nav class="bottom-nav" id="bottom-nav">
+    <button class="bottom-nav-item is-active" data-view="home">Home</button>
+    <button class="bottom-nav-item" data-view="groups">Groups</button>
+    <button class="bottom-nav-item" data-view="contacts">Contacts</button>
+    <button class="bottom-nav-item" data-view="activity">Activity</button>
+  </nav>
+
+</div>
+
+<!-- ========== MODALS / SHEETS (shared) ========== -->
+<div id="sheet-backdrop" class="sheet-backdrop" hidden></div>
+
+<!-- New / Edit Group -->
+<div id="sheet-group" class="bottom-sheet" hidden>
+  <div class="sheet-handle"></div>
+  <div class="sheet-head">
+    <h2 id="sheet-group-title">New group</h2>
+    <button class="icon-btn sheet-close" data-close>✕</button>
+  </div>
+  <form id="group-form" class="sheet-form">
+    <label class="field">
+      <span class="field-label">Group name</span>
+      <input type="text" name="name" required maxlength="60" />
+    </label>
+    <label class="field">
+      <span class="field-label">Description (optional)</span>
+      <input type="text" name="description" maxlength="120" />
+    </label>
+    <span class="field-label">Category</span>
+    <div class="chip-row" id="group-type-chips">
+      <button type="button" class="chip is-active" data-value="general">General</button>
+      <button type="button" class="chip" data-value="trip">Trip</button>
+      <button type="button" class="chip" data-value="home">Home</button>
+      <button type="button" class="chip" data-value="work">Work</button>
+    </div>
+    <input type="hidden" name="type" value="general" />
+    <span class="field-label">Invite members</span>
+    <div id="group-invite-contacts" class="checkbox-list"></div>
+    <label class="field">
+      <span class="field-label">Or invite by email</span>
+      <div class="inline-input-row">
+        <input type="email" id="group-invite-email" placeholder="email@example.com" />
+        <button type="button" id="group-invite-email-btn" class="btn btn-outline btn-sm">Add</button>
+      </div>
+    </label>
+    <div id="group-invite-pending" class="pending-chip-row"></div>
+    <button type="submit" class="btn btn-primary btn-block">Create group</button>
+  </form>
+</div>
+
+<!-- Group Settings -->
+<div id="sheet-group-settings" class="bottom-sheet" hidden>
+  <div class="sheet-handle"></div>
+  <div class="sheet-head">
+    <h2>Group settings</h2>
+    <button class="icon-btn sheet-close" data-close>✕</button>
+  </div>
+  <form id="group-settings-form" class="sheet-form">
+    <label class="field">
+      <span class="field-label">Group name</span>
+      <input type="text" name="name" required maxlength="60" />
+    </label>
+    <label class="field">
+      <span class="field-label">Description</span>
+      <input type="text" name="description" maxlength="120" />
+    </label>
+    <span class="field-label">Category</span>
+    <div class="chip-row" id="group-settings-type-chips">
+      <button type="button" class="chip" data-value="general">General</button>
+      <button type="button" class="chip" data-value="trip">Trip</button>
+      <button type="button" class="chip" data-value="home">Home</button>
+      <button type="button" class="chip" data-value="work">Work</button>
+    </div>
+    <input type="hidden" name="type" />
+    <button type="submit" class="btn btn-primary btn-block">Save changes</button>
+  </form>
+  <button id="leave-group-btn" class="btn btn-danger-text btn-block">Leave group</button>
+</div>
+
+<!-- Add Expense -->
+<div id="sheet-expense" class="bottom-sheet bottom-sheet--tall" hidden>
+  <div class="sheet-handle"></div>
+  <div class="sheet-head">
+    <h2>Add expense</h2>
+    <button class="icon-btn sheet-close" data-close>✕</button>
+  </div>
+
+  <button id="scan-receipt-btn" class="receipt-upload-btn" type="button">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 7V5a1 1 0 0 1 1-1h2M20 7V5a1 1 0 0 0-1-1h-2M4 17v2a1 1 0 0 0 1 1h2M20 17v2a1 1 0 0 1-1 1h-2"/><circle cx="12" cy="12" r="3"/></svg>
+    <span>
+      <strong>Scan a receipt</strong>
+      <small>Extract items and amounts from a photo</small>
+    </span>
+    <input type="file" id="receipt-input" accept="image/*" capture="environment" hidden />
+  </button>
+  <p id="receipt-status" class="receipt-status" hidden></p>
+
+  <form id="expense-form" class="sheet-form">
+    <label class="field">
+      <span class="field-label">Description</span>
+      <input type="text" name="description" required maxlength="60" id="expense-description" />
+    </label>
+    <span class="field-label">Category</span>
+    <div class="chip-row" id="expense-category-chips">
+      <button type="button" class="chip is-active" data-value="general">General</button>
+      <button type="button" class="chip" data-value="food">Food &amp; Drinks</button>
+      <button type="button" class="chip" data-value="groceries">Groceries</button>
+      <button type="button" class="chip" data-value="transport">Transport</button>
+      <button type="button" class="chip" data-value="home">Home</button>
+      <button type="button" class="chip" data-value="fun">Fun</button>
+    </div>
+    <input type="hidden" name="category" value="general" />
+    <label class="field">
+      <span class="field-label">Date</span>
+      <input type="date" name="date" required />
+    </label>
+
+    <div class="split-tabs">
+      <button type="button" class="split-tab is-active" data-split="total">Total</button>
+      <button type="button" class="split-tab" data-split="detail">Detail</button>
+    </div>
+
+    <!-- TOTAL MODE -->
+    <div id="split-total-panel" class="split-panel is-active">
+      <label class="field">
+        <span class="field-label">Total amount</span>
+        <input type="number" id="expense-total-amount" step="0.01" min="0.01" placeholder="0.00" />
+      </label>
+      <label class="field">
+        <span class="field-label">Paid by</span>
+        <select id="expense-paid-by"></select>
+      </label>
+      <span class="field-label">Split with</span>
+      <div id="expense-split-with" class="checkbox-list"></div>
+    </div>
+
+    <!-- DETAIL MODE -->
+    <div id="split-detail-panel" class="split-panel">
+      <p class="hint-text">Set what each person paid and what they owe.</p>
+      <div id="expense-detail-rows" class="detail-rows"></div>
+      <div class="detail-totals">
+        <span>Paid total: <strong id="detail-paid-total">0.00</strong></span>
+        <span>Share total: <strong id="detail-share-total">0.00</strong></span>
+      </div>
+    </div>
+
+    <p id="expense-form-error" class="form-error" hidden></p>
+    <button type="submit" class="btn btn-primary btn-block">Add expense</button>
+  </form>
+</div>
+
+<!-- Settle Up -->
+<div id="sheet-settle" class="bottom-sheet" hidden>
+  <div class="sheet-handle"></div>
+  <div class="sheet-head">
+    <h2>Settle up</h2>
+    <button class="icon-btn sheet-close" data-close>✕</button>
+  </div>
+  <div id="settle-content"></div>
+</div>
+
+<!-- Add Contact -->
+<div id="sheet-contact" class="bottom-sheet" hidden>
+  <div class="sheet-handle"></div>
+  <div class="sheet-head">
+    <h2>Add a contact</h2>
+    <button class="icon-btn sheet-close" data-close>✕</button>
+  </div>
+  <form id="contact-form" class="sheet-form">
+    <label class="field">
+      <span class="field-label">Email address</span>
+      <input type="email" name="email" required placeholder="friend@example.com" />
+    </label>
+    <p id="contact-form-error" class="form-error" hidden></p>
+    <button type="submit" class="btn btn-primary btn-block">Send request</button>
+  </form>
+</div>
+
+<!-- Notifications -->
+<div id="sheet-notifications" class="bottom-sheet" hidden>
+  <div class="sheet-handle"></div>
+  <div class="sheet-head">
+    <h2>Notifications</h2>
+    <button id="clear-notifications-btn" class="link-btn">Clear all</button>
+  </div>
+  <div id="notifications-list" class="ledger-list">
+    <p class="empty-hint">Nothing here yet.</p>
+  </div>
+</div>
+
+<!-- Profile / Settings -->
+<div id="sheet-profile" class="bottom-sheet" hidden>
+  <div class="sheet-handle"></div>
+  <div class="sheet-head">
+    <h2>Settings</h2>
+    <button class="icon-btn sheet-close" data-close>✕</button>
+  </div>
+  <form id="profile-form" class="sheet-form">
+    <label class="field">
+      <span class="field-label">Display name</span>
+      <input type="text" name="displayName" required maxlength="40" />
+    </label>
+    <div class="field">
+      <span class="field-label">Email</span>
+      <p id="profile-email" class="static-value"></p>
+    </div>
+    <button type="submit" class="btn btn-primary btn-block">Save changes</button>
+  </form>
+  <button id="signout-btn" class="btn btn-danger-text btn-block">Sign out</button>
+</div>
+
+<!-- Confirm dialog (generic) -->
+<div id="confirm-dialog" class="confirm-dialog" hidden>
+  <div class="confirm-box">
+    <p id="confirm-message"></p>
+    <div class="confirm-actions">
+      <button id="confirm-cancel" class="btn btn-outline btn-sm">Cancel</button>
+      <button id="confirm-ok" class="btn btn-danger btn-sm">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast" hidden></div>
+
+<!-- ========== SCRIPTS ========== -->
+<script type="module" src="js/firebase-config.js"></script>
+<script type="module" src="js/auth.js"></script>
+<script type="module" src="js/data.js"></script>
+<script type="module" src="js/settlement.js"></script>
+<script type="module" src="js/receipt-scan.js"></script>
+<script type="module" src="js/ui.js"></script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
