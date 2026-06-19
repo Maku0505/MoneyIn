@@ -85,6 +85,8 @@ document.getElementById("google-signin-btn").addEventListener("click", async () 
   try {
     await Auth.signInWithGoogle();
   } catch (err) {
+    const code = err?.code || "";
+    if (code === "auth/cancelled-popup-request" || code === "auth/popup-closed-by-user") return;
     showAuthError(err.message || friendlyAuthError(err));
   }
 });
@@ -102,12 +104,14 @@ document.getElementById("forgot-password-btn").addEventListener("click", async (
 
 function friendlyAuthError(err) {
   const code = err?.code || "";
+  if (code === "auth/cancelled-popup-request" || code === "auth/popup-closed-by-user") return null;
   if (code.includes("user-not-found") || code.includes("wrong-password") || code.includes("invalid-credential")) {
     return "Incorrect email or password.";
   }
   if (code.includes("email-already-in-use")) return "An account with this email already exists.";
   if (code.includes("weak-password")) return "Password should be at least 6 characters.";
   if (code.includes("invalid-email")) return "Enter a valid email address.";
+  if (code.includes("unauthorized-domain")) return "Google sign-in is not enabled for this domain. Use email and password instead.";
   return err.message || "Something went wrong. Try again.";
 }
 
