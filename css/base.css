@@ -3,24 +3,25 @@
    ============================================================ */
 
 :root {
-  /* Color tokens */
-  --ink: #0E0F0C;
-  --ink-soft: #2A2B26;
-  --paper: #F7F5EF;
-  --paper-dim: #EDEAE0;
-  --line: #D8D4C6;
-  --line-soft: #E7E4D8;
-  --moss: #3D5A3D;
-  --moss-deep: #2C4330;
-  --moss-tint: #E3EAE1;
-  --rust: #C75D3A;
-  --rust-tint: #F6E4DC;
-  --grey: #8A8578;
-  --grey-light: #B5B0A0;
+  /* Color tokens — dark theme matching DivAid */
+  --ink: #F0F0F0;
+  --ink-soft: #BBBBBB;
+  --paper: #131313;
+  --paper-dim: #1E1E1E;
+  --paper-mid: #272727;
+  --line: #383838;
+  --line-soft: #2C2C2C;
+  --moss: #5CBF5C;
+  --moss-deep: #3D9E3D;
+  --moss-tint: rgba(92, 191, 92, 0.12);
+  --rust: #FF6B6B;
+  --rust-tint: rgba(255, 107, 107, 0.12);
+  --grey: #888888;
+  --grey-light: #505050;
   --white: #FFFFFF;
 
-  /* Type */
-  --font-display: 'Fraunces', Georgia, serif;
+  /* Type — clean sans-serif throughout, matching DivAid */
+  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'Roboto Mono', ui-monospace, monospace;
 
@@ -33,15 +34,15 @@
   --sp-6: 32px;
   --sp-7: 48px;
 
-  /* Radius — intentionally restrained, ledger not bubbly */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
+  /* Radius — more rounded to match DivAid */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
 
-  --shadow-sheet: 0 -8px 32px rgba(14, 15, 12, 0.18);
-  --shadow-card: 0 1px 2px rgba(14, 15, 12, 0.06);
+  --shadow-sheet: 0 -4px 24px rgba(0, 0, 0, 0.5);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.3);
 
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -63,13 +64,13 @@ body {
 }
 
 h1, h2, h3 {
-  font-family: var(--font-display);
-  font-weight: 600;
+  font-family: var(--font-body);
+  font-weight: 700;
   margin: 0;
   color: var(--ink);
 }
 
-h1 { font-size: 28px; letter-spacing: -0.01em; }
+h1 { font-size: 26px; letter-spacing: -0.02em; }
 h2 { font-size: 17px; font-weight: 600; }
 
 p { margin: 0; }
@@ -87,8 +88,8 @@ input, select {
 a { color: inherit; }
 
 ::selection {
-  background: var(--moss-tint);
-  color: var(--moss-deep);
+  background: var(--moss);
+  color: var(--white);
 }
 
 /* Visible keyboard focus everywhere */
