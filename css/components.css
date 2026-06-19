@@ -21,7 +21,7 @@
 
 .btn-primary {
   background: var(--moss);
-  color: var(--paper);
+  color: var(--white);
 }
 .btn-primary:hover { background: var(--moss-deep); }
 .btn-primary:disabled { background: var(--grey-light); cursor: not-allowed; }
@@ -35,7 +35,7 @@
 
 .btn-danger {
   background: var(--rust);
-  color: var(--paper);
+  color: var(--white);
 }
 .btn-danger-text {
   background: transparent;
@@ -76,9 +76,9 @@
   height: 36px;
   border-radius: 50%;
   background: var(--moss);
-  color: var(--paper);
+  color: var(--white);
   border: none;
-  font-family: var(--font-display);
+  font-family: var(--font-body);
   font-weight: 600;
   font-size: 14px;
   display: inline-flex;
@@ -122,10 +122,13 @@
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
   padding: 12px 14px;
-  background: var(--white);
+  background: var(--paper-mid);
   color: var(--ink);
   outline-offset: 1px;
 }
+.field input::placeholder,
+.field select::placeholder,
+.search-input::placeholder { color: var(--grey); }
 .field input:focus,
 .field select:focus {
   border-color: var(--moss);
@@ -164,7 +167,7 @@
 }
 .chip {
   border: 1px solid var(--line);
-  background: var(--white);
+  background: var(--paper-mid);
   color: var(--ink-soft);
   border-radius: 999px;
   padding: 7px 14px;
@@ -174,7 +177,7 @@
 .chip.is-active {
   background: var(--moss);
   border-color: var(--moss);
-  color: var(--paper);
+  color: var(--white);
 }
 
 .pending-chip-row {
@@ -187,8 +190,8 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: var(--moss-tint);
-  color: var(--moss-deep);
+  background: var(--paper-mid);
+  color: var(--moss);
   border-radius: 999px;
   padding: 5px 6px 5px 12px;
   font-size: 13px;
@@ -196,12 +199,12 @@
 .pending-chip button {
   background: none;
   border: none;
-  color: var(--moss-deep);
+  color: var(--moss);
   font-size: 14px;
   width: 18px; height: 18px;
   border-radius: 50%;
 }
-.pending-chip button:hover { background: rgba(44,67,48,0.15); }
+.pending-chip button:hover { background: var(--moss-tint); }
 
 /* ---- Checkbox list ---- */
 .checkbox-list {
@@ -247,15 +250,16 @@
 .ledger-avatar {
   width: 38px; height: 38px;
   border-radius: 50%;
-  background: var(--moss-tint);
-  color: var(--moss-deep);
+  background: var(--paper-mid);
+  color: var(--moss);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-display);
+  font-family: var(--font-body);
   font-weight: 600;
   font-size: 14px;
   flex-shrink: 0;
+  border: 1px solid var(--line);
 }
 
 .ledger-main {
@@ -341,14 +345,14 @@
 .sheet-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(14, 15, 12, 0.45);
+  background: rgba(0, 0, 0, 0.65);
   z-index: 40;
 }
 
 .bottom-sheet {
   position: fixed;
   left: 0; right: 0; bottom: 0;
-  background: var(--paper);
+  background: var(--paper-dim);
   border-radius: 20px 20px 0 0;
   box-shadow: var(--shadow-sheet);
   z-index: 50;
@@ -453,6 +457,8 @@
   font-size: 13.5px;
   width: 100%;
   font-family: var(--font-mono);
+  background: var(--paper-mid);
+  color: var(--ink);
 }
 .detail-totals {
   display: flex;
@@ -481,7 +487,7 @@
 .confirm-dialog {
   position: fixed;
   inset: 0;
-  background: rgba(14,15,12,0.45);
+  background: rgba(0, 0, 0, 0.65);
   z-index: 60;
   display: flex;
   align-items: center;
@@ -489,7 +495,8 @@
   padding: var(--sp-4);
 }
 .confirm-box {
-  background: var(--paper);
+  background: var(--paper-dim);
+  border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   padding: var(--sp-5);
   max-width: 360px;
