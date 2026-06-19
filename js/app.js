@@ -6,7 +6,6 @@ import { auth } from "./firebase-config.js";
 import * as Auth from "./auth.js";
 import * as Data from "./data.js";
 import * as Settle from "./settlement.js";
-import * as Receipt from "./receipt-scan.js";
 import {
   formatMoney, initials, formatDate, todayISO, el,
   showToast, openSheet, closeSheet, confirmDialog,
@@ -28,7 +27,6 @@ const state = {
   currentGroupExpenses: [],     // expenses for open group
   currentContactId: null,        // open contact detail
   pendingGroupInvites: [],        // staged invites in "create group" sheet
-  receiptDraft: null,              // parsed receipt awaiting confirmation
   unsubscribers: []
 };
 
@@ -632,11 +630,9 @@ function openAddExpenseSheet() {
 
   document.getElementById("expense-form").reset();
   document.getElementById("expense-form-error").hidden = true;
-  document.getElementById("receipt-status").hidden = true;
   document.querySelector('#expense-form input[name="date"]').value = todayISO();
   setActiveChip(document.getElementById("expense-category-chips"), "general");
   document.querySelector('#expense-form input[name="category"]').value = "general";
-  state.receiptDraft = null;
 
   // Reset split mode to Total
   document.querySelectorAll(".split-tab").forEach(t => t.classList.toggle("is-active", t.dataset.split === "total"));
@@ -713,42 +709,6 @@ function wireDetailTotals() {
   inputs.forEach(i => i.addEventListener("input", recompute));
   recompute();
 }
-
-// ---- Receipt scanning ----
-document.getElementById("scan-receipt-btn").addEventListener("click", () => {
-  document.getElementById("receipt-input").click();
-});
-
-document.getElementById("receipt-input").addEventListener("change", async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  const status = document.getElementById("receipt-status");
-  status.hidden = false;
-  status.classList.remove("is-error");
-  status.textContent = "Reading the receipt…";
-
-  try {
-    const parsed = await Receipt.scanReceipt(file);
-    state.receiptDraft = parsed;
-
-    document.getElementById("expense-description").value = parsed.description;
-    document.querySelector('#expense-form input[name="date"]').value = parsed.date;
-
-    status.textContent = `Found ${parsed.items.length} item${parsed.items.length === 1 ? "" : "s"} · ${formatMoney(parsed.total || parsed.items.reduce((s, i) => s + i.amount, 0) + (parsed.tax || 0))}`;
-
-    // Pre-fill total amount in Total tab; user can still switch to itemized via Detail if desired.
-    const total = parsed.total || (parsed.items.reduce((s, i) => s + i.amount, 0) + (parsed.tax || 0));
-    document.getElementById("expense-total-amount").value = total.toFixed(2);
-
-    showToast("Receipt scanned. Review the amount and save.");
-  } catch (err) {
-    status.classList.add("is-error");
-    status.textContent = err.message || "Couldn't read this receipt.";
-  } finally {
-    e.target.value = "";
-  }
-});
 
 document.getElementById("expense-form").addEventListener("submit", async (e) => {
   e.preventDefault();
